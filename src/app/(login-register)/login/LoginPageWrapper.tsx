@@ -10,6 +10,7 @@ import { Eye, EyeOff, Loader2Icon } from "lucide-react";
 import { signIn, SignInResponse } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import LiquidEither from "@/src/components/global/LiquidEither";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Adresse email invalide" }),
@@ -77,8 +78,25 @@ export default function LoginPageWrapper() {
   }, [status, session]);
 
   return (
-    <div className="py-4 h-screen overflow-y-auto w-full bg-[url('/images/bg.webp')] bg-cover bg-left-top">
-      <div className="flex items-center justify-center h-full">
+    <div className="py-4 h-screen overflow-y-auto w-full bg-[url('/images/bg.webp')] bg-cover bg-left-top relative">
+      <LiquidEither
+        colors={["#5227FF", "#FF9FFC", "#B19EEF"]}
+        mouseForce={20}
+        cursorSize={100}
+        isViscous={false}
+        viscous={30}
+        iterationsViscous={32}
+        iterationsPoisson={32}
+        resolution={0.5}
+        isBounce={false}
+        autoDemo={true}
+        autoSpeed={0.5}
+        autoIntensity={2.2}
+        takeoverDuration={0.25}
+        autoResumeDelay={3000}
+        autoRampDuration={0.6}
+      />
+      <div className="flex items-center justify-center h-full absolute inset-0">
         <div className="relative bg-white/40 border-white border border-opacity-40 backdrop-blur-sm w-fit mx-auto p-5 xl:p-10 rounded-xl space-y-4">
           <div className="space-y-10">
             <Link
