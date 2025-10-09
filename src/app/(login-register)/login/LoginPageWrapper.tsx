@@ -79,9 +79,9 @@ export default function LoginPageWrapper() {
       console.log("Utilisateur connecté :", user);
 
       if (user.profileType === "adminUser") {
-        router.push("/admin");
+        router.push("/sprayhive/admin");
       } else if (user.profileType === "basicUser") {
-        router.push("/domiciliation");
+        router.push("/sprayhive/domiciliation");
       } else {
         router.push("/");
       }

@@ -160,3 +160,15 @@ export type DomiciliationStepperForm = {
   price: string;
   documents: { name: string; url: string }[];
 };
+
+export type Documents = {
+  id_doc: string;
+  type: string;
+  name: string;
+  created_at?: string;
+  updated_at?: string;
+  signed_at?: string;
+  size: string;
+  status: "available" | "pending" | "expired";
+  url?: string;
+}
