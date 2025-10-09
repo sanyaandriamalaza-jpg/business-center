@@ -7,11 +7,10 @@ import { Label } from "@/src/components/ui/label";
 import { Button } from "@/src/components/ui/button";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2Icon } from "lucide-react";
-import { signIn, SignInResponse } from "next-auth/react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import LiquidEither from "@/src/components/global/LiquidEither";
 
+// ✅ Validation du formulaire
 const loginSchema = z.object({
   email: z.string().email({ message: "Adresse email invalide" }),
   password: z.string({
@@ -30,52 +29,77 @@ export default function LoginPageWrapper() {
   const [generalError, setGeneralError] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
 
-  const { data: session, status } = useSession();
   const router = useRouter();
 
+  // ✅ Fonction de connexion Laravel
   const handleClick = async () => {
     setLoading(true);
-    router.push("/domiciliation");
-    // const result = loginSchema.safeParse({ email, password })
 
-    // if (!result.success) {
-    //     const fieldErrors = result.error.flatten().fieldErrors
-    //     setErrors({
-    //         email: fieldErrors.email?.[0],
-    //         password: fieldErrors.password?.[0],
-    //     })
-    //     setLoading(false);
-    //     return
-    // }
+    // Validation client avec Zod
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      setErrors({
+        email: fieldErrors.email?.[0],
+        password: fieldErrors.password?.[0],
+      });
+      setLoading(false);
+      return;
+    }
 
-    // setErrors({})
+    setErrors({});
+    setGeneralError(undefined);
 
-    // try {
-    //     const signInResult: SignInResponse | undefined = await signIn("credentials", {
-    //         redirect: false,
-    //         email: result.data.email,
-    //         password: result.data.password,
-    //     });
+    try {
+      // ⚙️ Appel à ton API Laravel
+      const res = await fetch("http://localhost:8000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: result.data.email,
+          password: result.data.password,
+        }),
+      });
 
-    //     if (signInResult?.error) {
-    //         setGeneralError(signInResult.error);
-    //     } else {
-    //         setGeneralError(undefined);
-    //     }
-    // } catch (error) {
-    //     console.error("Erreur pendant la connexion :", error);
-    //     setGeneralError("Une erreur inattendue est survenue. Veuillez réessayer.");
-    // } finally {
-    //     setLoading(false);
-    // }
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(
+          data.message ||
+            "Les identifiants sont incorrects ou le serveur est injoignable."
+        );
+      }
+
+      // ✅ Sauvegarde du token pour les prochaines requêtes
+      localStorage.setItem("token", data.data.token);
+      localStorage.setItem("user", JSON.stringify(data.data.user));
+
+      const user = data.data.user;
+
+      console.log("Utilisateur connecté :", user);
+
+      if (user.profileType === "adminUser") {
+        router.push("/admin");
+      } else if (user.profileType === "basicUser") {
+        router.push("/domiciliation");
+      } else {
+        router.push("/");
+      }
+    } catch (error: any) {
+      console.error("Erreur pendant la connexion :", error);
+      setGeneralError(error.message || "Une erreur inattendue est survenue.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      console.log("Utilisateur connecté :", session);
-      // TODO : redirection de l'utilisateur
-    }
-  }, [status, session]);
+  // // Optionnel : vérifie si un utilisateur est déjà connecté
+  // useEffect(() => {
+  //   const token = localStorage.getItem("token");
+  //   if (token) {
+  //     router.push("/domiciliation");
+  //   }
+  // }, [router]);
 
   return (
     <div className="py-4 h-screen overflow-y-auto w-full bg-[url('/images/bg.webp')] bg-cover bg-left-top relative">
@@ -114,7 +138,8 @@ export default function LoginPageWrapper() {
           </div>
           <div className="space-y-4">
             <div className="space-y-2">
-              <div className="">
+              {/* Champ Email */}
+              <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
                   value={email}
@@ -133,7 +158,9 @@ export default function LoginPageWrapper() {
                   <p className="text-red-600 text-sm mt-1">{errors.email}</p>
                 )}
               </div>
-              <div className="">
+
+              {/* Champ Mot de passe */}
+              <div>
                 <Label htmlFor="password">Mot de passe</Label>
                 <div className="relative w-full">
                   <Input
@@ -169,6 +196,8 @@ export default function LoginPageWrapper() {
                   <p className="text-red-600 text-sm mt-1">{errors.password}</p>
                 )}
               </div>
+
+              {/* Bouton connexion */}
               <div className="pt-3">
                 <Button
                   onClick={handleClick}
@@ -183,6 +212,7 @@ export default function LoginPageWrapper() {
                 </Button>
               </div>
             </div>
+
             <div className="text-sm lg:text-base">
               Vous n’avez pas encore de compte ?{" "}
               <Link href="/register" className="underline text-blue-800">
@@ -190,6 +220,7 @@ export default function LoginPageWrapper() {
               </Link>
             </div>
           </div>
+
           <div className="h-[25px] absolute bottom-1">
             {generalError && (
               <p className="text-red-600 text-sm mt-1">{generalError}</p>
