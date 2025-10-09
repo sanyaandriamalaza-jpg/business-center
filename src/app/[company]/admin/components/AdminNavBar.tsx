@@ -37,24 +37,24 @@ const navItems = [
     label: "Tableau de bord",
     icon: <LayoutDashboard size={20} />,
   },
-  // { href: "/admin/spaces", label: "Espaces", icon: <Building2 size={20} /> },
-  // {
-  //   href: "/admin/interactive-map",
-  //   label: "Plan interactif",
-  //   icon: <PencilRuler size={20} />,
-  // },
-  // {
-  //   href: "/admin/reservations",
-  //   label: "Réservations",
-  //   icon: <CalendarCheck size={20} />,
-  // },
-  // {
-  //   href: "/admin/access-code",
-  //   label: "Codes d'accès",
-  //   icon: <KeyRound size={20} />,
-  // },
+  { href: "/admin/spaces", label: "Espaces", icon: <Building2 size={20} /> },
   {
-    href: "/admin/domiciliations",
+    href: "/admin/interactive-map",
+    label: "Plan interactif",
+    icon: <PencilRuler size={20} />,
+  },
+  {
+    href: "/admin/reservations",
+    label: "Réservations",
+    icon: <CalendarCheck size={20} />,
+  },
+  {
+    href: "/admin/access-code",
+    label: "Codes d'accès",
+    icon: <KeyRound size={20} />,
+  },
+  {
+    href: "/admin/virtual-office-address",
     label: "Domiciliations",
     icon: <MapPin size={20} />,
   },
@@ -64,7 +64,7 @@ const navItems = [
     icon: <Library size={20} />,
   },
   {
-    href: "/admin/utilisateurs",
+    href: "/admin/users",
     label: "Utilisateurs",
     icon: <Users size={20} />,
   },
@@ -179,8 +179,7 @@ export default function AdminNavBar() {
             {navItems.map(({ href, label, icon }) => (
               <li key={href}>
                 <Link
-                  // href={`/${adminCompany?.slug ?? ""}${href}`}
-                   href={`/sprayhive${href}`}
+                  href={`/${session?.user.companySlug}${href}`}
                   className={`flex gap-1 items-center py-3 text-sm hover:border-cDeafultPrimary-100 hover:text-cDefaultPrimary-100 transition ${
                     pathname === href
                       ? "text-cDefaultPrimary-100 font-medium border-b-2 border-cDefaultPrimary-100 hover:text-cDefaultPrimary-100 hover:border-cDefaultPrimary-100"

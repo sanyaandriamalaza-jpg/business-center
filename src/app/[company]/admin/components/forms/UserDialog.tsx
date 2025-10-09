@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,155 +7,113 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/src/components/ui/dialog";
+import {
+  AppWindowIcon,
+  CodeIcon,
+  Eye,
+  EyeOff,
+  User,
+  UserRound,
+} from "lucide-react";
 import { Button } from "@/src/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/src/components/ui/select";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/src/components/ui/tabs";
+import { useEffect, useState } from "react";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/src/components/ui/form";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { PhoneInput } from "react-international-phone";
+import "react-international-phone/style.css";
+import { isPhoneValid as validatePhone } from "@/src/lib/customfunction";
+import { signIn, SignInResponse, signOut, useSession } from "next-auth/react";
+import { useGlobalStore } from "@/src/store/useGlobalStore";
+import { useAdminStore } from "@/src/store/useAdminStore";
+import CreateUserForm from "./CreateUserForm";
 import { useToast } from "@/src/hooks/use-toast";
 
-const userSchema = z.object({
-  name: z.string().min(1, "Le nom est requis"),
-  firstname: z.string().min(1, "Le prénom est requis"),
-  phone: z.string().min(10, "Téléphone doit contenir 10 chiffres minimum"),
-  email: z.string().email("Email invalide"),
-  role: z.enum(["admin", "user"]),
-  company: z.string().min(1, "Entreprise requise"),
+const subscriptionFormSchema = z.object({
+  name: z
+    .string({
+      required_error: "Le nom est requis",
+    })
+    .refine((value) => value.trim().length > 0, {
+      message: "Le nom est requis",
+    }),
+  firstName: z
+    .string({
+      required_error: "Le prénom est requis",
+    })
+    .refine((value) => value.trim().length > 0, {
+      message: "Le prénom est requis",
+    }),
+  subscriptionEmail: z
+    .string({
+      required_error: "L‘adresse email est requis",
+    })
+    .email("Adresse email invalide"),
+  phone: z.string(),
+  subscriptionPassword: z
+    .string({
+      required_error: "Le mot de passe est requis",
+    })
+    .min(6, "Le mot de passe doit contenir au moins 6 caractères"),
 });
 
-export type UserFormValues = z.infer<typeof userSchema>;
-
-export function UserDialog({
+export default function UserDialog({
   open,
   setOpen,
-  onCreate,
+  reloadData,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onCreate: (form: UserFormValues) => void;
+  reloadData: () => void;
 }) {
-  const toast = useToast();
-
-  const form = useForm<UserFormValues>({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      name: "",
-      firstname: "",
-      phone: "",
-      email: "",
-      role: "user",
-      company: "",
-    },
-  });
-
-  const handleCreate = (data: UserFormValues) => {
-    toast.toast({
-      title: "Succès",
-      description: "Utilisateur ajouté avec succès !",
-    });
-    setOpen(false);
-    onCreate(data);
-    form.reset();
-  };
+  const { toast } = useToast();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-gray-900 font-bold text-center mb-4">Ajouter un utilisateur</DialogTitle>
+          <DialogTitle className="text-gray-900 font-bold text-center mb-4">
+            Ajouter un utilisateur
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleCreate)} className="space-y-4">
-          <div className="grid gap-2">
-            <Label htmlFor="name" className="text-gray-600 text-sm font-medium">Nom</Label>
-            <Input id="name" placeholder="Ex : Doe" {...form.register("name")} />
-            {form.formState.errors.name && (
-              <p className="text-red-500 text-xs">
-                {form.formState.errors.name.message}
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="firstname" className="text-gray-600 text-sm font-medium">Prénom</Label>
-            <Input id="firstname" placeholder="Ex : John" {...form.register("firstname")} />
-            {form.formState.errors.firstname && (
-              <p className="text-red-500 text-xs">
-                {form.formState.errors.firstname.message}
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="phone" className="text-gray-600 text-sm font-medium">Téléphone</Label>
-            <Input id="phone" placeholder="Ex : +33 0 00 00 00 00" {...form.register("phone")} />
-            {form.formState.errors.phone && (
-              <p className="text-red-500 text-xs">
-                {form.formState.errors.phone.message}
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="email" className="text-gray-600 text-sm font-medium">Email</Label>
-            <Input id="email" placeholder="Ex : johndoe@email.com" type="text" {...form.register("email")} />
-            {form.formState.errors.email && (
-              <p className="text-red-500 text-xs">
-                {form.formState.errors.email.message}
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="role" className="text-gray-600 text-sm font-medium">Rôle</Label>
-            <Select
-              defaultValue="user"
-              onValueChange={(value) =>
-                form.setValue("role", value as "admin" | "user")
-              }
-            >
-              <SelectTrigger id="role">
-                <SelectValue  placeholder="Sélectionner un rôle" />
-              </SelectTrigger>
-              <SelectContent >
-                <SelectItem value="admin" className="text-gray-600 text-sm font-medium">Administrateur</SelectItem>
-                <SelectItem value="user" className="text-gray-600 text-sm font-medium">Utilisateur simple</SelectItem>
-              </SelectContent>
-            </Select>
-            {form.formState.errors.role && (
-              <p className="text-red-500 text-xs">
-                {form.formState.errors.role.message}
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="company" className="text-gray-600 text-sm font-medium">Entreprise</Label>
-            <Input id="company" placeholder="L'entreprise representer" {...form.register("company")} />
-            {form.formState.errors.company && (
-              <p className="text-red-500 text-xs">
-                {form.formState.errors.company.message}
-              </p>
-            )}
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <Button
-              variant="ghost"
-              className="bg-indigo-600 text-white hover:bg-indigo-600 hover:text-white"
-              type="submit"
-            >
-              Enregistrer
-            </Button>
-          </div>
-        </form>
+        <CreateUserForm
+          isAdmin={true}
+          onComplete={(value) => {
+            toast({
+              title: value ? "Succès" : "Erreur",
+              description: value
+                ? "Utilisateur créé avec succès."
+                : "Une erreur est survenue lors de la création d‘utilisateur.",
+              variant: value ? "success" : "destructive",
+            });
+            reloadData();
+            setOpen(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -41,7 +41,7 @@ export default function FormuleSection({badge, title, prix, offres}: formuleProp
         ))}
       
     </ul>
-    <button onClick={()=> router.push('/domiciliation/Subscription')} className={`${title === "Premium" ? "bg-indigo-600 text-white": "bg-indigo-50 hover:bg-indigo-100 text-indigo-600"} font-medium rounded-lg py-3 w-full mt-auto hover:bg-[#4635b5] transition `} >
+    <button onClick={()=> router.push('/sprayhive/business-address/1')} className={`${title === "Premium" ? "bg-indigo-600 text-white": "bg-indigo-50 hover:bg-indigo-100 text-indigo-600"} font-medium rounded-lg py-3 w-full mt-auto hover:bg-[#4635b5] transition `} >
       Souscrire au plan {title}
     </button>
   </div>

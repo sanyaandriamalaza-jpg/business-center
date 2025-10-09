@@ -33,6 +33,9 @@ import {
 } from "@/src/components/ui/select";
 import { z } from "zod";
 import { useToast } from "@/src/hooks/use-toast";
+import { Textarea } from "@/src/components/ui/textarea";
+import { Checkbox } from "@/src/components/ui/checkbox";
+import { Label } from "@/src/components/ui/label";
 
 type Equipment = {
   label: string;
@@ -83,7 +86,7 @@ const steps = [
 // Zod schemas
 const infosSchema = z.object({
   name: z.string().min(2, "Le nom est requis"),
-  type: z.string().min(1, "Le type est requis"),
+  description: z.string().min(1, "La description est obligatoire")
 });
 const schedulesSchema = z.object({
   capacity: z.coerce.number().min(1, "Capacité requise"),
@@ -114,7 +117,7 @@ const defaultSchedules = daysOfWeek.map((day, idx) => ({
 
 const initialForm = {
   name: "",
-  type: "",
+  description: "",
   capacity: "",
   schedules: defaultSchedules,
   equipments: [] as string[],
@@ -218,173 +221,156 @@ export default function WorkspaceDialog({
     setOpen(false);
   };
   // Equipements: 2 colonnes, items déplaçables
-    const selectedEquipments = allEquipments.filter((eq) =>
-      form.equipments.includes(eq.label)
-    );
-    const unselectedEquipments = allEquipments.filter(
-      (eq) => !form.equipments.includes(eq.label)
-    );
-    const orderedAllEquipments = [
-      ...selectedEquipments,
-      ...unselectedEquipments,
-    ];
+  const selectedEquipments = allEquipments.filter((eq) =>
+    form.equipments.includes(eq.label)
+  );
+  const unselectedEquipments = allEquipments.filter(
+    (eq) => !form.equipments.includes(eq.label)
+  );
+  const orderedAllEquipments = [
+    ...selectedEquipments,
+    ...unselectedEquipments,
+  ];
 
-    const colSize = Math.ceil(orderedAllEquipments.length / 2);
-    const left = orderedAllEquipments.slice(0, colSize);
-    const right = orderedAllEquipments.slice(colSize);
+  const colSize = Math.ceil(orderedAllEquipments.length / 2);
+  const left = orderedAllEquipments.slice(0, colSize);
+  const right = orderedAllEquipments.slice(colSize);
 
-    // Drag & drop handlers
-    const onDragStart = (idx: number) => setDraggedIndex(idx);
-    const onDragOver = (idx: number, overCol: "left" | "right") => {
-      if (draggedIndex === null || draggedIndex === idx) return;
-      const absoluteIdx = overCol === "left" ? idx : left.length + idx;
+  // Drag & drop handlers
+  const onDragStart = (idx: number) => setDraggedIndex(idx);
+  const onDragOver = (idx: number, overCol: "left" | "right") => {
+    if (draggedIndex === null || draggedIndex === idx) return;
+    const absoluteIdx = overCol === "left" ? idx : left.length + idx;
 
-      setForm((f: any) => ({
-        ...f,
-        equipments: arrayMove(f.equipments, draggedIndex, absoluteIdx),
-      }));
+    setForm((f: any) => ({
+      ...f,
+      equipments: arrayMove(f.equipments, draggedIndex, absoluteIdx),
+    }));
 
-      setDraggedIndex(absoluteIdx);
-    };
-    const onDragEnd = () => setDraggedIndex(null);
+    setDraggedIndex(absoluteIdx);
+  };
+  const onDragEnd = () => setDraggedIndex(null);
 
-    // Click/toggle pour ajouter/retirer equipement
-    const toggleEquipment = (label: string) => {
-      setForm((f: any) => ({
-        ...f,
-        equipments: f.equipments.includes(label)
-          ? f.equipments.filter((l: string) => l !== label)
-          : [...f.equipments, label],
-      }));
-    };
+  // Click/toggle pour ajouter/retirer equipement
+  const toggleEquipment = (label: string) => {
+    setForm((f: any) => ({
+      ...f,
+      equipments: f.equipments.includes(label)
+        ? f.equipments.filter((l: string) => l !== label)
+        : [...f.equipments, label],
+    }));
+  };
 
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Ajouter un espace de travail</DialogTitle>
-          </DialogHeader>
-          {/* Stepper */}
-          <div className="flex items-center justify-center gap-2 mb-6">
-            {steps.map((s, idx) => (
-              <React.Fragment key={s.label}>
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`rounded-full w-8 h-8 flex items-center justify-center
-                  ${
-                    idx === step
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Ajouter un espace de travail</DialogTitle>
+        </DialogHeader>
+        {/* Stepper */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          {steps.map((s, idx) => (
+            <React.Fragment key={s.label}>
+              <div className="flex flex-col items-center">
+                <div
+                  className={`rounded-full w-8 h-8 flex items-center justify-center
+                  ${idx === step
                       ? "bg-indigo-600 text-white"
                       : idx < step
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-200 text-gray-400"
-                  }
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-200 text-gray-400"
+                    }
                   font-bold text-base`}
-                  >
-                    {idx < step ? (
-                      <CheckCircle2 className="w-6 h-6" />
-                    ) : (
-                      idx + 1
-                    )}
-                  </div>
-                  <span
-                    className={`text-xs mt-1 ${
-                      idx === step ? "text-indigo-700" : "text-gray-500"
-                    }`}
-                  >
-                    {s.label}
-                  </span>
+                >
+                  {idx < step ? (
+                    <CheckCircle2 className="w-6 h-6" />
+                  ) : (
+                    idx + 1
+                  )}
                 </div>
-                {idx < steps.length - 1 && (
-                  <div className="w-6 h-0.5 bg-gray-300" />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-          {/* Step content */}
-          <div>
-            {step === 0 && (
-              <div className="space-y-3 mt-4">
-                <label>
-                  <span className="block text-sm mb-1">
-                    Nom de l'espace de travail
-                  </span>
-                  <Input
-                    type="text"
-                    placeholder="Ex : espace coworkoing A"
-                    value={form.name}
-                    onChange={(e) =>
-                      setForm((f: any) => ({ ...f, name: e.target.value }))
-                    }
-                    required
-                  />
-                  {errors.name && (
-                    <span className="text-xs text-red-500">{errors.name}</span>
-                  )}
-                </label>
-                <label>
-                  <span className="block text-sm mb-1">Type d'espace</span>
-                  <Select
-                    value={form.type}
-                    onValueChange={(val) => {
-                      const pricing =
-                        defaultPricing[val as keyof typeof defaultPricing]?.[
-                          form.pricingLabel as "horaire" | "journalier"
-                        ];
-                      setForm((f: any) => ({
-                        ...f,
-                        type: val,
-                        pricingValue: pricing || "",
-                      }));
-                    }}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez le type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {workspaceTypes.map((w) => (
-                        <SelectItem key={w.value} value={w.value}>
-                          {w.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.type && (
-                    <span className="text-xs text-red-500">{errors.type}</span>
-                  )}
-                </label>
+                <span
+                  className={`text-xs mt-1 ${idx === step ? "text-indigo-700" : "text-gray-500"
+                    }`}
+                >
+                  {s.label}
+                </span>
               </div>
-            )}
-            {step === 1 && (
-              <div className="space-y-3 mt-4">
-                <label>
-                  <span className="block text-sm mb-1">
-                    Capacité de l'espace
+              {idx < steps.length - 1 && (
+                <div className="w-6 h-0.5 bg-gray-300" />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+        {/* Step content */}
+        <div>
+          {step === 0 && (
+            <div className="space-y-3 mt-4">
+              <label className="block">
+                <span className="block text-sm mb-1">
+                  Nom de l'espace de travail
+                </span>
+                <Input
+                  type="text"
+                  placeholder="Ex : Bureau executif A"
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((f: any) => ({ ...f, name: e.target.value }))
+                  }
+                  required
+                />
+                {errors.name && (
+                  <span className="text-xs text-red-500">{errors.name}</span>
+                )}
+              </label>
+              <label className="block">
+                <span className="block text-sm mb-1">
+                  Description de l'espace de travail
+                </span>
+                <Textarea
+                  rows={4}
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm((f: any) => ({ ...f, description: e.target.value }))
+                  }
+                />
+                {errors.description && (
+                  <span className="text-xs text-red-500">{errors.description}</span>
+                )}
+              </label>
+
+            </div>
+          )}
+          {step === 1 && (
+            <div className="space-y-3 mt-4">
+              <label>
+                <span className="block text-sm mb-1">
+                  Capacité de l'espace
+                </span>
+                <Input
+                  type="text"
+                  placeholder="Ex: 10 personnes"
+                  min="1"
+                  value={form.capacity}
+                  onChange={(e) =>
+                    setForm((f: any) => ({ ...f, capacity: e.target.value }))
+                  }
+                  required
+                />
+                {errors.capacity && (
+                  <span className="text-xs text-red-500">
+                    {errors.capacity}
                   </span>
-                  <Input
-                    type="text"
-                    placeholder="Ex: 10 personnes"
-                    min="1"
-                    value={form.capacity}
-                    onChange={(e) =>
-                      setForm((f: any) => ({ ...f, capacity: e.target.value }))
-                    }
-                    required
-                  />
-                  {errors.capacity && (
-                    <span className="text-xs text-red-500">
-                      {errors.capacity}
-                    </span>
-                  )}
-                </label>
-                <div>
-                  <span className="block text-sm mb-1">
-                    Horaires d'ouverture
-                  </span>
-                  <div className="space-y-1">
-                    {form.schedules.map((s: any, idx: any) => (
-                      <div key={s.day} className="flex items-center gap-3">
-                        <span className="w-20">{s.day}</span>
+                )}
+              </label>
+              <div>
+                <span className="block text-sm mb-1">
+                  Horaires d'ouverture
+                </span>
+                <div className="space-y-1">
+                  {form.schedules.map((s: any, idx: any) => (
+                    <div key={s.day} className="flex items-center gap-3">
+                      <div className="w-24">{s.day}</div>
+                      <div className="flex items-center gap-2">
                         <Input
                           type="time"
                           value={s.open}
@@ -412,179 +398,181 @@ export default function WorkspaceDialog({
                           }
                           className="w-24"
                         />
-                        <label className="ml-2 flex items-center gap-1 text-xs">
-                          <input
-                            type="checkbox"
+                        <div className="ml-2 flex items-center gap-1 text-xs">
+                          <Checkbox
                             checked={s.closed}
-                            onChange={(e) =>
+                            onCheckedChange={(checked) => {
                               setForm((f: any) => {
                                 const arr = [...f.schedules];
-                                arr[idx].closed = e.target.checked;
-                                if (e.target.checked) {
+                                arr[idx].closed = !!checked;
+                                if (checked) {
                                   arr[idx].open = "";
                                   arr[idx].close = "";
                                 }
                                 return { ...f, schedules: arr };
-                              })
-                            }
+                              });
+                            }}
+                            id={`closed-${idx}`}
                           />
-                          Fermé
-                        </label>
+                          <Label htmlFor={`closed-${idx}`} className="text-xs cursor-pointer">
+                            Fermé
+                          </Label>
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            )}
-            {step === 2 && (
-              <div className="mt-4">
-                <span className="block mb-2 text-sm font-medium">
-                  Matériels présents (Selectionnez pour ajouter)
-                </span>
-                <div className="flex gap-6">
-                    {[left, right].map((column, colIdx) => (
-                      <div key={colIdx} className="w-1/2 space-y-2">
-                        {column.map((equip, idx) => {
-                          const isSelected = form.equipments.includes(
-                            equip.label
-                          );
-                          const Icon = equip.icon;
+            </div>
+          )}
+          {step === 2 && (
+            <div className="mt-4">
+              <span className="block mb-2 text-sm font-medium">
+                Matériels présents (Selectionnez pour ajouter)
+              </span>
+              <div className="flex gap-6">
+                {[left, right].map((column, colIdx) => (
+                  <div key={colIdx} className="w-1/2 space-y-2">
+                    {column.map((equip, idx) => {
+                      const isSelected = form.equipments.includes(
+                        equip.label
+                      );
+                      const Icon = equip.icon;
 
-                          return (
-                            <div
-                              key={equip.label}
-                              className={`flex items-center px-2 py-1 rounded border cursor-pointer select-none gap-2 ${
-                                isSelected
-                                  ? "bg-indigo-100 border-indigo-400"
-                                  : "bg-white border-gray-200"
-                              }`}
-                              draggable={isSelected}
-                              onClick={() => toggleEquipment(equip.label)}
-                              onDragStart={() =>
-                                onDragStart(
-                                  colIdx === 0 ? idx : left.length + idx
-                                )
-                              }
-                              onDragOver={(e) => {
-                                e.preventDefault();
-                                onDragOver(
-                                  idx,
-                                  colIdx === 0 ? "left" : "right"
-                                );
-                              }}
-                              onDrop={onDragEnd}
-                              onDragEnd={onDragEnd}
-                              title={
-                                isSelected ? "Déplacer ou retirer" : "Ajouter"
-                              }
-                            >
-                              <Icon className="w-4 h-4 text-muted-foreground" />
-                              {equip.label}
-                              <span className="ml-auto text-xs">
-                                {isSelected ? "✔" : "+"}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ))}
-                </div>
-                {errors.equipments && (
+                      return (
+                        <div
+                          key={equip.label}
+                          className={`flex items-center px-2 py-1 rounded border cursor-pointer select-none gap-2 ${isSelected
+                            ? "bg-indigo-100 border-indigo-400"
+                            : "bg-white border-gray-200"
+                            }`}
+                          draggable={isSelected}
+                          onClick={() => toggleEquipment(equip.label)}
+                          onDragStart={() =>
+                            onDragStart(
+                              colIdx === 0 ? idx : left.length + idx
+                            )
+                          }
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            onDragOver(
+                              idx,
+                              colIdx === 0 ? "left" : "right"
+                            );
+                          }}
+                          onDrop={onDragEnd}
+                          onDragEnd={onDragEnd}
+                          title={
+                            isSelected ? "Déplacer ou retirer" : "Ajouter"
+                          }
+                        >
+                          <Icon className="w-4 h-4 text-muted-foreground" />
+                          {equip.label}
+                          <span className="ml-auto text-xs">
+                            {isSelected ? "✔" : "+"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+              {errors.equipments && (
+                <span className="text-xs text-red-500">
+                  {errors.equipments}
+                </span>
+              )}
+            </div>
+          )}
+          {step === 3 && (
+            <div className="space-y-3 mt-4">
+              <label>
+                <span className="block text-sm mb-1">
+                  Politique tarifaire
+                </span>
+                {/* <Select
+                  value={form.pricingLabel}
+                  onValueChange={(val) => {
+                    const pricing =
+                      defaultPricing[
+                      form.type as keyof typeof defaultPricing
+                      ]?.[val as "horaire" | "journalier"];
+                    setForm((f: any) => ({
+                      ...f,
+                      pricingLabel: val,
+                      pricingValue: pricing || "",
+                    }));
+                  }}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Horaire / Journalier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="horaire">Horaire</SelectItem>
+                    <SelectItem value="journalier">Journalier</SelectItem>
+                  </SelectContent>
+                </Select> */}
+                {errors.pricingLabel && (
                   <span className="text-xs text-red-500">
-                    {errors.equipments}
+                    {errors.pricingLabel}
                   </span>
                 )}
-              </div>
-            )}
-            {step === 3 && (
-              <div className="space-y-3 mt-4">
-                <label>
-                  <span className="block text-sm mb-1">
-                    Politique tarifaire
+              </label>
+              <label>
+                <span className="block text-sm mb-1">Valeur</span>
+                <Input
+                  type="text"
+                  placeholder="Ex: 25€/h"
+                  value={form.pricingValue}
+                  onChange={(e) =>
+                    setForm((f: any) => ({
+                      ...f,
+                      pricingValue: e.target.value,
+                    }))
+                  }
+                  required
+                  readOnly
+                />
+                {errors.pricingValue && (
+                  <span className="text-xs text-red-500">
+                    {errors.pricingValue}
                   </span>
-                  <Select
-                    value={form.pricingLabel}
-                    onValueChange={(val) => {
-                      const pricing =
-                        defaultPricing[
-                          form.type as keyof typeof defaultPricing
-                        ]?.[val as "horaire" | "journalier"];
-                      setForm((f: any) => ({
-                        ...f,
-                        pricingLabel: val,
-                        pricingValue: pricing || "",
-                      }));
-                    }}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Horaire / Journalier" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="horaire">Horaire</SelectItem>
-                      <SelectItem value="journalier">Journalier</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.pricingLabel && (
-                    <span className="text-xs text-red-500">
-                      {errors.pricingLabel}
-                    </span>
-                  )}
-                </label>
-                <label>
-                  <span className="block text-sm mb-1">Valeur</span>
-                  <Input
-                    type="text"
-                    placeholder="Ex: 25€/h"
-                    value={form.pricingValue}
-                    onChange={(e) =>
-                      setForm((f: any) => ({
-                        ...f,
-                        pricingValue: e.target.value,
-                      }))
-                    }
-                    required
-                    readOnly
-                  />
-                  {errors.pricingValue && (
-                    <span className="text-xs text-red-500">
-                      {errors.pricingValue}
-                    </span>
-                  )}
-                </label>
-              </div>
-            )}
-          </div>
-          <DialogFooter className="mt-6 flex-row flex justify-between">
+                )}
+              </label>
+            </div>
+          )}
+        </div>
+        <DialogFooter className="mt-6 flex-row flex justify-between">
+          <Button
+            variant="outline"
+            type="button"
+            onClick={handlePrev}
+            disabled={step === 0}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" /> Précédent
+          </Button>
+          {step < steps.length - 1 ? (
             <Button
-              variant="outline"
+              variant="ghost"
+              className="bg-indigo-600 text-white hover:bg-indigo-800 hover:text-white"
+              onClick={handleNext}
               type="button"
-              onClick={handlePrev}
-              disabled={step === 0}
             >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Précédent
+              Suivant <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
-            {step < steps.length - 1 ? (
-              <Button
-                variant="ghost"
-                className="bg-indigo-600 text-white hover:bg-indigo-800 hover:text-white"
-                onClick={handleNext}
-                type="button"
-              >
-                Suivant <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                className="bg-indigo-600 text-white hover:bg-indigo-800 hover:text-white"
-                onClick={handleCreate}
-                type="button"
-              >
-                <Plus className="w-4 h-4 mr-2" /> Ajouter l'espace
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
+          ) : (
+            <Button
+              variant="ghost"
+              className="bg-indigo-600 text-white hover:bg-indigo-800 hover:text-white"
+              onClick={handleCreate}
+              type="button"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Ajouter l'espace
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }

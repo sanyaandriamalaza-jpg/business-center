@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/src/components/ui/dialog";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
 import { Checkbox } from "@/src/components/ui/checkbox";
 import {
   Select,
@@ -19,23 +18,41 @@ import {
   SelectContent,
   SelectItem,
 } from "@/src/components/ui/select";
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Textarea } from "@/src/components/ui/textarea";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/src/components/ui/form";
 
-const spaceTypes = ["coworking", "bureau_prive", "salle_reunion"] as const;
-type SpaceType = (typeof spaceTypes)[number];
+import * as z from "zod";
+import { CoworkingOffer } from "@/src/lib/type";
+import { useEffect } from "react";
+import { features } from "process";
+
+const spaceTypes = ["privateOffice", "coworkingSpace", "meetingRoom"] as const;
 
 const formSchema = z.object({
   type: z.enum(spaceTypes),
-  isTaged: z.boolean(),
-  tarifs: z.object({
-    horaire: z.string().regex(/^\d+$/, "Doit être un nombre"),
-    journalier: z.string().regex(/^\d+$/, "Doit être un nombre"),
-  }),
-  features: z.string(),
+  description: z.string().min(1, { message: "Ce champ est requis" }),
+  isTagged: z.boolean(),
+  tag: z.string().optional(),
+  hourlyRate: z
+    .number({
+      invalid_type_error: "Veuillez entrer un nombre",
+      required_error: "Veuillez entrer un nombre",
+    })
+    .min(0.01, { message: "Veuillez entrer une valeur positive" }),
+  dailyRate: z
+    .number({
+      invalid_type_error: "Veuillez entrer un nombre",
+      required_error: "Veuillez entrer un nombre",
+    })
+    .min(0.01, { message: "Veuillez entrer une valeur positive" }),
+  features: z.string().min(1, { message: "Ce champ est requis" }),
 });
 
 export type FormValues = z.infer<typeof formSchema>;
@@ -44,115 +61,233 @@ export default function WorkspaceOfferDialog({
   open,
   setOpen,
   onCreate,
+  initialData,
+  resetInitialData,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
   onCreate: (form: FormValues) => void;
+  initialData?: CoworkingOffer;
+  resetInitialData?: () => void;
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "coworking",
-      isTaged: false,
-      tarifs: {
-        horaire: "",
-        journalier: "",
-      },
+      type: "privateOffice",
+      description: "",
+      isTagged: false,
+      tag: "",
       features: "",
     },
   });
 
-  const selectedType = form.watch("type");
+  const { reset } = form;
 
   const onSubmit = (data: FormValues) => {
     onCreate(data);
+    reset({
+      dailyRate: undefined,
+      hourlyRate: undefined,
+      description: "",
+      isTagged: false,
+      features: "",
+    });
     setOpen(false);
   };
 
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        type: initialData.type,
+        description: initialData.description,
+        isTagged: initialData.isTagged,
+        tag: initialData.tag ?? undefined,
+        hourlyRate: Number(initialData.hourlyRate),
+        dailyRate: Number(initialData.dailyRate),
+        features: initialData.features.join("\n"),
+      });
+    }
+  }, [initialData, reset]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
+      <DialogContent className="max-h-screen overflow-y-auto text-neutral-800">
         <DialogHeader>
-          <DialogTitle className="text-gray-900 text-center font-medium">Ajouter une offre</DialogTitle>
+          <DialogTitle className="text-center text-gray-900 font-medium">
+            {initialData ? "Modifier l‘offre" : "Ajouter une offre"}
+          </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label className="text-gray-600">Type d’espace</Label>
-            <Select
-              value={form.getValues("type")}
-              onValueChange={(value) =>
-                form.setValue("type", value as SpaceType)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Choisissez un type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="coworking">Espace coworking</SelectItem>
-                <SelectItem value="bureau_prive">Bureau privé</SelectItem>
-                <SelectItem value="salle_reunion">Salle de réunion</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Checkbox isTaged */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={form.watch("isTaged")}
-              onCheckedChange={(checked) =>
-                form.setValue("isTaged", Boolean(checked))
-              }
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Type */}
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type d’espace</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choisissez un type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="privateOffice">
+                        Bureau privé
+                      </SelectItem>
+                      <SelectItem value="coworkingSpace">
+                        Espace coworking
+                      </SelectItem>
+                      <SelectItem value="meetingRoom">
+                        Salle de réunion
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            <Label className="text-gray-600">Est tagué ?</Label>
-          </div>
-
-          <div>
-            <Label className="text-gray-600">Tarif horaire (€)</Label>
-            <Input
-              {...form.register("tarifs.horaire")}
-              placeholder="ex: 10000"
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem className="">
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input type="text" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {form.formState.errors.tarifs?.horaire && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.tarifs?.horaire.message}
-              </p>
+
+            {/* Checkbox */}
+            <FormField
+              control={form.control}
+              name="isTagged"
+              render={({ field }) => (
+                <FormItem className="flex items-center gap-2 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      id="isTagged"
+                    />
+                  </FormControl>
+                  <FormLabel htmlFor="isTagged" className="text-gray-600">
+                    Est tagué ?
+                  </FormLabel>
+                </FormItem>
+              )}
+            />
+            {form.watch("isTagged") ? (
+              <FormField
+                control={form.control}
+                name="tag"
+                render={({ field }) => (
+                  <FormItem className="">
+                    <FormLabel>Tag</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="ex: Populaire"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            ) : (
+              ""
             )}
-          </div>
 
-          <div>
-            <Label className="text-gray-600">Tarif journalier (€)</Label>
-            <Input
-              {...form.register("tarifs.journalier")}
-              placeholder="ex: 70000"
+            {/* Tarif horaire */}
+            <FormField
+              control={form.control}
+              name="hourlyRate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tarif horaire (€)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="ex: 15"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {form.formState.errors.tarifs?.journalier && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.tarifs?.journalier.message}
-              </p>
-            )}
-          </div>
 
-          <div>
-            <Label className="text-gray-600">Fonctionnalités (une par ligne)</Label>
-            <Textarea
-              placeholder="ex:casier sécurusé/... "
-              {...form.register("features")}
-              rows={4}
+            {/* Tarif journalier */}
+            <FormField
+              control={form.control}
+              name="dailyRate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tarif journalier (€)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="ex: 105"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
-              Annuler
-            </Button>
-            <Button variant="ghost" className="bg-indigo-600 text-white hover:bg-indigo-800 hover:text-white" type="submit">Enregistrer</Button>
-          </div>
-        </form>
+            {/* Fonctionnalités */}
+            <FormField
+              control={form.control}
+              name="features"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fonctionnalités (une par ligne)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      rows={4}
+                      placeholder="ex: casier sécurisé / accès 24h/24"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setOpen(false);
+                  if (resetInitialData) {
+                    resetInitialData();
+                  }
+                }}
+              >
+                Annuler
+              </Button>
+              <Button
+                type="submit"
+                variant="ghost"
+                className="bg-indigo-600 text-white hover:bg-indigo-800 hover:text-white"
+              >
+                {initialData ? "Sauvegarder les modifications" : "Enregistrer"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

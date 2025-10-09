@@ -1,11 +1,12 @@
 import DocumentUpload from "./DocumentUpload";
-import { PlanCard } from "../../../domiciliation/Subscription/PlanCard";
-import { RegistrationForm } from "../../../domiciliation/Subscription/RegistrationForm";
+import { PlanCard } from "./PlanCard";
+import { RegistrationForm } from "./RegistrationForm";
+
 
 
 export default function SubscriptionWrapper() {
   return (
-    <div className="py-6 px-3">
+    <div className="py-6 px-3 container mx-auto">
       <div className="mb-8">
         <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">Souscription à une offre de domiciliation</h1>
         <p className="text-gray-600 text-sm md:text-base">

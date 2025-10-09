@@ -210,7 +210,7 @@ export default function ContactPage() {
                 <div className="ml-4">
                   <h3 className="font-medium">Adresse</h3>
                   <div className="mt-1 text-gray-600 text-sm">
-                    Imandry
+                    Imandry, Carrière arrêt bus 28
                     <br />
                     301 Fianarantsoa, Madagascar
                   </div>
@@ -239,11 +239,11 @@ export default function ContactPage() {
                 <div className="ml-4">
                   <h3 className="font-medium">Horaires d'ouverture</h3>
                   <div className="mt-1 text-gray-600 text-sm">
-                    Lundi - Vendredi : 8h00 - 20h00
+                    Lundi - Vendredi : 8h00 - 18h00
                     <br />
-                    Samedi : 9h00 - 18h00
+                    Samedi : Fermé
                     <br />
-                    Dimanche : Fermé
+                    Dimanche : 14h00 - 17h30
                   </div>
                 </div>
               </div>

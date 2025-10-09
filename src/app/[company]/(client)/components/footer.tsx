@@ -46,7 +46,7 @@ export default function Footer() {
             </ul>
           </div>
           {/* Support */}
-          <div>
+          {/* <div>
             <h3 className="text-lg font-bold mb-2">Support</h3>
             <ul className="space-y-2 text-[#b9b8d3] text-sm">
               <li><a href="#">Centre d'Aide</a></li>
@@ -55,7 +55,7 @@ export default function Footer() {
               <li><a href="#">Politique de Confidentialité</a></li>
               <li><a href="#">Accessibilité</a></li>
             </ul>
-          </div>
+          </div> */}
           {/* Contactez-nous */}
           <div>
             <h3 className="text-lg font-bold mb-2">Contactez-nous</h3>
@@ -63,7 +63,7 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="text-[#27c89d]" size={18} />
                 <span>
-                  Imandry <br />
+                  Carrière, arrêt bus 28 <br />
                   301, Fianarantsoa, Madagascar
                 </span>
               </li>
@@ -80,13 +80,13 @@ export default function Footer() {
         </div>
         <hr className="my-8 border-[#302d60]" />
         {/* Bottom bar */}
-        <div className="flex flex-col md:flex-row md:justify-between items-center gap-4 text-[#b9b8d3] text-xs">
+        <div className="flex flex-col md:flex-row md:justify-center items-center gap-4 text-[#b9b8d3] text-xs">
           <span>© 2025 SprayHive. Tous droits réservés.</span>
-          <div className="flex gap-6">
+          {/* <div className="flex gap-6">
             <a href="#">Conditions</a>
             <a href="#">Confidentialité</a>
             <a href="#">Cookies</a>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>
