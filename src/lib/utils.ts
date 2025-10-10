@@ -24,6 +24,8 @@ export function cn(...args: (string | boolean | undefined | null)[]) {
 
 export const baseUrl = process.env.NODE_ENV === "production" ? `${process.env.NEXT_PUBLIC_URL}` : `${process.env.NEXT_PUBLIC_URL_DEV}`
 
+export const apiUrl = process.env.NODE_ENV === "production" ? `${process.env.NEXT_PUBLIC_URL}` : `${process.env.API_URL_DEV}`
+
 export const allEquipments: Equipment[] = [
   { value: "wifi", label: "Wi-Fi", icon: Wifi },
   { value: "impression", label: "Service d‘impression", icon: Printer },

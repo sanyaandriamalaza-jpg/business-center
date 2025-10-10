@@ -41,8 +41,9 @@ import {
 } from "@/src/components/ui/form";
 import React from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
 import SignatureWrapper from "../SignatureWrapperPdf";
+import { useAuth } from "@/src/hooks/useAuth";
 
 type Props = {
   open: boolean;
@@ -102,10 +103,11 @@ export function ViewDomiciliationDialog({
   const companyId = adminCompany?.id;
   const categoryId = domiciliation?.userFiles.documents?.[0].id_category_file;
 
-  const { data: session } = useSession();
-  const adminEmail = session?.user.email || "";
-  const adminFirstName = session?.user.firstName || "";
-  const adminLastName = session?.user.name || "";
+  // const { data: session } = useSession();
+  const { user, status, logout } = useAuth();
+  const adminEmail = user?.email || "";
+  const adminFirstName = user?.firstName || "";
+  const adminLastName = user?.name || "";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -179,7 +181,6 @@ export function ViewDomiciliationDialog({
           toast({
             title: "Succès",
             description: "La domiciliation de l'entreprise est désormais active.",
-            variant: "success",
           });
         }
 
@@ -227,7 +228,6 @@ export function ViewDomiciliationDialog({
         toast({
           title: "Succès",
           description: "Le document a été validé avec succès.",
-          variant: "success",
         });
       } else {
         toast({
@@ -366,7 +366,6 @@ export function ViewDomiciliationDialog({
         toast({
           title: "Procédure créée",
           description: "La demande de signature a été envoyée à l'utilisateur.",
-          variant: "success",
         });
 
         return { success: true, procedureId: data.procedureId, userSigningUrl };
@@ -504,7 +503,6 @@ export function ViewDomiciliationDialog({
       toast({
         title: "Succès",
         description: "La signature est faite avec succès.",
-        variant: "success",
       });
 
       setIsSigned(true);
@@ -551,7 +549,6 @@ export function ViewDomiciliationDialog({
       toast({
         title: "Enregistrement réussi",
         description: "Le document signé est enregistré avec succès!.",
-        variant: "success",
       });
       console.log(" URL du document signé :", saveData.signedFileUrl);
 
