@@ -526,7 +526,7 @@ export default function VirtualOfficeLists({
           </div>
         </div>
       </div>
-      <div id="domiciliationViewer">
+      {/* <div id="domiciliationViewer">
         <ViewDomiciliationDialog
           key={dialogDataKey}
           open={viewOpen}
@@ -538,7 +538,7 @@ export default function VirtualOfficeLists({
           userId={userId as string}
           onReloadData={onReloadData}
         />
-      </div>
+      </div> */}
     </>
   );
 }

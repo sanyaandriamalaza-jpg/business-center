@@ -1,11 +1,27 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import dynamic from "next/dynamic";
 import DraggableSignature from "./DraggableSignature";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { Signatory, SignatureData, SignaturePosition } from "@/src/lib/type";
+
+// ✅ Charger pdfjs uniquement côté client
+let pdfjs: any = null;
+if (typeof window !== "undefined") {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  pdfjs = require("react-pdf").pdfjs;
+  pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+}
+
+// ✅ Charger Document et Page dynamiquement sans SSR
+const Document = dynamic(() => import("react-pdf").then(mod => mod.Document), {
+  ssr: false,
+});
+const Page = dynamic(() => import("react-pdf").then(mod => mod.Page), {
+  ssr: false,
+});
 
 interface SignatureWrapperProps {
   fileUrl: string;
@@ -16,8 +32,6 @@ interface SignatureWrapperProps {
     position: SignaturePosition
   ) => void;
 }
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const SignatureWrapper = ({
   fileUrl,
@@ -45,7 +59,6 @@ const SignatureWrapper = ({
     const adminPlaced = signatures.admin !== null;
     const clientPlaced = signatures.client !== null;
     const allPlaced = adminPlaced && clientPlaced;
-
     setAllSignaturesPlaced(allPlaced);
 
     if (allPlaced && onSignaturesReady) {
@@ -147,43 +160,8 @@ const SignatureWrapper = ({
             →
           </button>
         </div>
-
-        <span className="text-sm text-gray-600">
-          Signatures sur la page {currentPage}
-        </span>
       </div>
 
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded">
-        <h3 className="font-bold mb-2">État des signatures:</h3>
-        <div className="flex gap-4">
-          <div
-            className={`px-3 py-1 rounded ${
-              signatures.admin
-                ? "bg-green-100 text-green-800"
-                : "bg-gray-100 text-gray-800"
-            }`}
-          >
-            Admin: {signatures.admin ? "✓" : "En attente"}
-          </div>
-          <div
-            className={`px-3 py-1 rounded ${
-              signatures.client
-                ? "bg-green-100 text-green-800"
-                : "bg-gray-100 text-gray-800"
-            }`}
-          >
-            Client: {signatures.client ? "✓" : "En attente"}
-          </div>
-        </div>
-        {allSignaturesPlaced && (
-          <div className="mt-2 text-green-600 font-semibold">
-            ✓ Toutes les signatures sont placées sur la page{" "}
-            {signatures.selectedPage} !
-          </div>
-        )}
-      </div>
-
-      {/* Conteneur principal */}
       <div
         ref={containerRef}
         className="relative border border-gray-300 bg-white overflow-auto max-h-screen"
@@ -200,19 +178,10 @@ const SignatureWrapper = ({
           onLoadSuccess={onDocumentLoadSuccess}
           onLoadError={onDocumentLoadError}
           loading={<div className="p-4">Chargement du document...</div>}
-          error={
-            <div className="p-4 text-red-500">
-              Erreur de chargement du document
-            </div>
-          }
         >
           <Page
             pageNumber={currentPage}
             scale={scale}
-            height={containerRef.current?.clientHeight}
-            loading={
-              <div className="p-4">Chargement de la page {currentPage}...</div>
-            }
             onRenderSuccess={(page) => {
               const viewport = page.getViewport({ scale: 1 });
               onPageLoadSuccess(currentPage, viewport.width, viewport.height);
@@ -220,7 +189,7 @@ const SignatureWrapper = ({
           />
         </Document>
 
-        {/* Overlay pour les signatures */}
+        {/* Signatures */}
         {!isLoading && (
           <div
             className="absolute top-0 left-0"
@@ -257,16 +226,8 @@ const SignatureWrapper = ({
                     }}
                     isPlaced={isPlaced}
                     onReset={() => resetSignature(signatory.type)}
-                    className="pointer-events-auto"
                   >
-                    <div
-                      className="flex items-center justify-center text-cStandard text-sm font-medium rounded shadow-lg cursor-grab active:cursor-grabbing transition-all duration-200"
-                      style={{
-                        width: "150px",
-                        height: "50px",
-                        border: "2px #d1d5db",
-                      }}
-                    >
+                    <div className="flex items-center justify-center text-cStandard text-sm font-medium rounded shadow-lg cursor-grab active:cursor-grabbing transition-all duration-200 w-[150px] h-[50px] border border-gray-300 bg-white">
                       Signature{" "}
                       {signatory.type === "admin" ? "Admin" : "Client"}
                       {isPlaced && <span className="ml-2">✓</span>}
@@ -278,72 +239,6 @@ const SignatureWrapper = ({
           </div>
         )}
       </div>
-
-      {/* Affichage des positions */}
-      <div className="mt-4 p-4 bg-gray-100 rounded">
-        <h3 className="font-bold mb-2">
-          Positions des signatures (Page {currentPage}):
-        </h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h4 className="font-semibold text-blue-700">Admin:</h4>
-            <pre className="text-xs bg-white p-2 rounded">
-              {signatures.admin && signatures.admin.page === currentPage
-                ? JSON.stringify(
-                    {
-                      x: signatures.admin.x,
-                      y: signatures.admin.y,
-                      page: signatures.admin.page,
-                    },
-                    null,
-                    2
-                  )
-                : "Non placée sur cette page"}
-            </pre>
-            {signatures.admin && signatures.admin.page === currentPage && (
-              <button
-                onClick={() => resetSignature("admin")}
-                className="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-              >
-                Réinitialiser
-              </button>
-            )}
-          </div>
-          <div>
-            <h4 className="font-semibold text-green-700">Client:</h4>
-            <pre className="text-xs bg-white p-2 rounded">
-              {signatures.client && signatures.client.page === currentPage
-                ? JSON.stringify(
-                    {
-                      x: signatures.client.x,
-                      y: signatures.client.y,
-                      page: signatures.client.page,
-                    },
-                    null,
-                    2
-                  )
-                : "Non placée sur cette page"}
-            </pre>
-            {signatures.client && signatures.client.page === currentPage && (
-              <button
-                onClick={() => resetSignature("client")}
-                className="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-              >
-                Réinitialiser
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {allSignaturesPlaced && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded">
-          <p className="text-green-700 mb-2">
-            ✓ Les deux signatures sont placées sur la page{" "}
-            {signatures.selectedPage}.
-          </p>
-        </div>
-      )}
     </div>
   );
 };

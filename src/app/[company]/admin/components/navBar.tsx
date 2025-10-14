@@ -30,6 +30,7 @@ import { useAdminStore } from "@/src/store/useAdminStore";
 import { AdminUser } from "@/src/lib/type";
 import AdminGeneralLoading from "./AdminGeneralLoading";
 import Image from "next/image";
+import { apiUrl } from "@/src/lib/utils";
 
 const navItems = [
   {
@@ -100,7 +101,7 @@ export default function AdminNavBar() {
   const fetchUserInfo = useCallback(
     async (userId: number) => {
       try {
-        const res = await fetch(`/api/user/admin/${userId}`);
+        const res = await fetch(`${apiUrl}/api/admin/${userId}`);
         const data = await res.json();
         if (data.success) {
           const adminUser = data.data as AdminUser;

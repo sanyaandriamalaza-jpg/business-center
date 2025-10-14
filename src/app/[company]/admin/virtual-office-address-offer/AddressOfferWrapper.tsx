@@ -19,6 +19,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { useToast } from "@/src/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/src/components/ui/alert-dialog";
 import { useAdminStore } from "@/src/store/useAdminStore";
+import { apiUrl } from "@/src/lib/utils";
 
 export default function AddressOfferWrapper() {
   const [planOpen, setPlanOpen] = useState(false);
@@ -34,7 +35,7 @@ export default function AddressOfferWrapper() {
 
   const fetchAllFormules = useCallback(async () => {
     try {
-      const response = await fetch("/api/virtual-office-offer");
+      const response = await fetch(`${apiUrl}/api/virtual-office-offer`);
       const data = await response.json();
       if (data.success) {
         setFormules(data.data);
@@ -59,7 +60,7 @@ export default function AddressOfferWrapper() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/virtual-office-offer", {
+      const response = await fetch(`${apiUrl}/api/virtual-office-offer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -111,7 +112,7 @@ export default function AddressOfferWrapper() {
 
     try {
       const response = await fetch(
-        `/api/virtual-office-offer/${updatedFormule.id}`,
+        `${apiUrl}/api/virtual-office-offer/${updatedFormule.id}`,
         {
           method: "PATCH",
           headers: {
@@ -163,7 +164,7 @@ export default function AddressOfferWrapper() {
   const deleteFormule = async (id: string) => {
     try {
       setIsDeleting(true);
-      const res = await fetch(`/api/virtual-office-offer/${id}`, {
+      const res = await fetch(`${apiUrl}/api/virtual-office-offer/${id}`, {
         method: "DELETE",
       });
 

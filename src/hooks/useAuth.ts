@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export type User = {
@@ -13,6 +14,8 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
+
+  const router = useRouter();
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -35,6 +38,8 @@ export function useAuth() {
     setUser(null);
     setToken(null);
     setStatus("unauthenticated");
+
+    router.push("/");
   };
 
   return { user, token, status, logout };

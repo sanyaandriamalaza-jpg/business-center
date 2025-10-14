@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Eye, EyeOff, Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import LiquidEither from "@/src/components/global/LiquidEither";
+import { apiUrl } from "@/src/lib/utils";
 
 // ✅ Validation du formulaire
 const loginSchema = z.object({
@@ -52,7 +53,7 @@ export default function LoginPageWrapper() {
 
     try {
       // ⚙️ Appel à ton API Laravel
-      const res = await fetch("http://localhost:8000/api/login", {
+      const res = await fetch(`${apiUrl}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -103,7 +104,7 @@ export default function LoginPageWrapper() {
 
   return (
     <div className="py-4 h-screen overflow-y-auto w-full bg-[url('/images/bg.webp')] bg-cover bg-left-top relative">
-      <LiquidEither
+      {/* <LiquidEither
         colors={["#5227FF", "#FF9FFC", "#B19EEF"]}
         mouseForce={20}
         cursorSize={100}
@@ -119,7 +120,7 @@ export default function LoginPageWrapper() {
         takeoverDuration={0.25}
         autoResumeDelay={3000}
         autoRampDuration={0.6}
-      />
+      /> */}
       <div className="flex items-center justify-center h-full absolute inset-0">
         <div className="relative bg-white/40 border-white border border-opacity-40 backdrop-blur-sm w-fit mx-auto p-5 xl:p-10 rounded-xl space-y-4">
           <div className="space-y-10">

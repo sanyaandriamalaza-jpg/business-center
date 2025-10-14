@@ -13,8 +13,8 @@ import {
 export default function Footer() {
   return (
     <footer className="bg-indigo-950 text-white pt-16 pb-8">
-      <div className="w-full mx-auto px-44">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+      <div className="w-full mx-auto px-44 flex flex-col items-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {/* FlexiSpace */}
           <div>
             <h3 className="text-xl font-bold mb-2">SprayHive</h3>
