@@ -28,7 +28,7 @@ import { isPhoneValid as validatePhone } from "@/src/lib/customfunction";
 import { signIn, SignInResponse, signOut, useSession } from "next-auth/react";
 import { useGlobalStore } from "@/src/store/useGlobalStore";
 import { useAdminStore } from "@/src/store/useAdminStore";
-import { cn } from "@/src/lib/utils";
+import { apiUrl, cn } from "@/src/lib/utils";
 import { Checkbox } from "@/src/components/ui/checkbox";
 import {
   Select,
@@ -152,7 +152,7 @@ export default function CreateUserForm({
       };
 
       try {
-        const res = await fetch(`/api/auth/register`, {
+        const res = await fetch(`${apiUrl}/api/register`, {
           method: "POST",
           body: JSON.stringify(data),
         });

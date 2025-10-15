@@ -10,6 +10,7 @@ import { Eye, EyeOff, Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import LiquidEither from "@/src/components/global/LiquidEither";
 import { apiUrl } from "@/src/lib/utils";
+import { useAuth } from "@/src/hooks/useAuth";
 
 // ✅ Validation du formulaire
 const loginSchema = z.object({
@@ -30,13 +31,12 @@ export default function LoginPageWrapper() {
   const [generalError, setGeneralError] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
 
-  const router = useRouter();
+  const { login, status } = useAuth();
 
   // ✅ Fonction de connexion Laravel
   const handleClick = async () => {
     setLoading(true);
 
-    // Validation client avec Zod
     const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors;
@@ -52,43 +52,9 @@ export default function LoginPageWrapper() {
     setGeneralError(undefined);
 
     try {
-      // ⚙️ Appel à ton API Laravel
-      const res = await fetch(`${apiUrl}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: result.data.email,
-          password: result.data.password,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(
-          data.message ||
-            "Les identifiants sont incorrects ou le serveur est injoignable."
-        );
-      }
-
-      // ✅ Sauvegarde du token pour les prochaines requêtes
-      localStorage.setItem("token", data.data.token);
-      localStorage.setItem("user", JSON.stringify(data.data.user));
-
-      const user = data.data.user;
-
-      console.log("Utilisateur connecté :", user);
-
-      if (user.profileType === "adminUser") {
-        router.push("/sprayhive/admin");
-      } else if (user.profileType === "basicUser") {
-        router.push("/sprayhive/domiciliation");
-      } else {
-        router.push("/");
-      }
+      await login(result.data.email, result.data.password);
     } catch (error: any) {
-      console.error("Erreur pendant la connexion :", error);
-      setGeneralError(error.message || "Une erreur inattendue est survenue.");
+      setGeneralError(error.message);
     } finally {
       setLoading(false);
     }

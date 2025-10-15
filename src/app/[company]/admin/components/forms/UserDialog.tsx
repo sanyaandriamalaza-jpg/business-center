@@ -108,7 +108,7 @@ export default function UserDialog({
               description: value
                 ? "Utilisateur créé avec succès."
                 : "Une erreur est survenue lors de la création d‘utilisateur.",
-              variant: value ? "success" : "destructive",
+              variant: value ? "default" : "destructive",
             });
             reloadData();
             setOpen(false);

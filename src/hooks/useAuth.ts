@@ -1,21 +1,16 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { apiUrl } from "@/src/lib/utils";
+import { User } from "../lib/type";
 
-export type User = {
-  id: number;
-  name: string;
-  email: string;
-  profileType: "basicUser" | "adminUser" | "superAdminUser";
-  [key: string]: any;
-};
+type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
 export function useAuth() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
-
-  const router = useRouter();
+  const [status, setStatus] = useState<AuthStatus>("loading");
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -26,21 +21,60 @@ export function useAuth() {
       setToken(storedToken);
       setStatus("authenticated");
     } else {
-      setUser(null);
-      setToken(null);
       setStatus("unauthenticated");
     }
   }, []);
 
-  const logout = () => {
+  const login = useCallback(
+    async (email: string, password: string) => {
+      try {
+        const res = await fetch(`${apiUrl}/api/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(
+            data.message ||
+              "Les identifiants sont incorrects ou le serveur est injoignable."
+          );
+        }
+
+        const token = data.data.token;
+        const user = data.data.user;
+
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        setToken(token);
+        setUser(user);
+        setStatus("authenticated");
+
+        if (user.profileType === "adminUser") {
+          router.push("/sprayhive/admin");
+        } else if (user.profileType === "basicUser") {
+          router.push("/sprayhive/domiciliation");
+        } else {
+          router.push("/");
+        }
+      } catch (error: any) {
+        throw new Error(error.message || "Erreur de connexion.");
+      }
+    },
+    [router]
+  );
+
+  const logout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
     setToken(null);
     setStatus("unauthenticated");
+    router.push("/login");
+  }, [router]);
 
-    router.push("/");
-  };
-
-  return { user, token, status, logout };
+  return { user, token, status, login, logout };
 }

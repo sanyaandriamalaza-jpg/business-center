@@ -13,6 +13,7 @@ import { Button } from "@/src/components/ui/button";
 import { Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { BasicUser } from "@/src/lib/type";
 import { useToast } from "@/src/hooks/use-toast";
+import { apiUrl } from "@/src/lib/utils";
 
 
 interface UserDeleteDialogProps {
@@ -33,7 +34,7 @@ export function UserDeleteDialog({
     setIsLoading(true);
     
     try {
-      const response = await fetch(`/api/user/basic-user/${user.id}`, {
+      const response = await fetch(`${apiUrl}/api/basic-user/${user.id}`, {
         method: "DELETE",
       });
 
@@ -43,7 +44,7 @@ export function UserDeleteDialog({
         toast.toast({
             title: "Success",
             description: "utilisateur supprimé.",
-            variant: "success",
+            variant: "default",
           });
         onOpenChange(false);
       } else {

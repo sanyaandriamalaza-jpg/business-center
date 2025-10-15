@@ -65,7 +65,7 @@ const navItems = [
     icon: <Library size={20} />,
   },
   {
-    href: "/admin/utilisateurs",
+    href: "/admin/users",
     label: "Utilisateurs",
     icon: <Users size={20} />,
   },

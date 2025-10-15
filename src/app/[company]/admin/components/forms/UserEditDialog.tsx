@@ -25,6 +25,7 @@ import { Button } from "@/src/components/ui/button";
 import { Loader2, Edit } from "lucide-react";
 import { BasicUser } from "@/src/lib/type";
 import { useToast } from "@/src/hooks/use-toast";
+import { apiUrl } from "@/src/lib/utils";
 
 // Schéma de validation avec Zod
 const userFormSchema = z.object({
@@ -95,7 +96,7 @@ export function UserEditDialog({
         return;
       }
 
-      const response = await fetch(`/api/user/basic-user/${user.id}`, {
+      const response = await fetch(`${apiUrl}/api/basic-user/${user.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -109,7 +110,7 @@ export function UserEditDialog({
         toast.toast({
           title: "Succès",
           description: "Utilisateur mis à jour avec succès.",
-          variant: "success",
+          variant: "default",
         });
         onOpenChange(false);
       } else {
