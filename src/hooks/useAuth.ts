@@ -2,13 +2,13 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { apiUrl } from "@/src/lib/utils";
-import { User } from "../lib/type";
+import { User, UserDataSession } from "../lib/type";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
 export function useAuth() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserDataSession | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
 

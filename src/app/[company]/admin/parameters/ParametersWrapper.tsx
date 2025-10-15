@@ -24,7 +24,6 @@ import ThemeSelector from "../components/ThemeSelector";
 import Cookies from "js-cookie";
 import { LogoWrapper } from "../components/LogoWrapper";
 import { uploadFile } from "@/src/lib/customfunction";
-import { RadioGroup, RadioGroupItem } from "@/src/components/ui/radio-group";
 import { Label } from "@/src/components/ui/label";
 import {
   Popover,
@@ -33,6 +32,8 @@ import {
 } from "@/src/components/ui/popover";
 import { RgbaColorPicker } from "react-colorful";
 import { RGBAColor } from "@/src/lib/type";
+import { RadioGroup, RadioGroupItem } from "@/src/components/ui/radio-group";
+import { apiUrl } from "@/src/lib/utils";
 
 const documentSchema = z.object({
   label: z.string().min(1, "Le nom du document est requis"),
@@ -281,7 +282,7 @@ export default function ParametersWrapper() {
         id_company: adminCompany.id,
       };
 
-      const response = await fetch("/api/color-theme", {
+      const response = await fetch(`${apiUrl}/api/color-theme`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(themeData),
@@ -304,7 +305,7 @@ export default function ParametersWrapper() {
       toast({
         title: "Succès",
         description: "Thème appliqué avec succès.",
-        variant: "success",
+        variant: "default",
       });
     } catch (error) {
       console.error("Erreur lors de l'application du thème :", error);
@@ -348,7 +349,7 @@ export default function ParametersWrapper() {
       );
 
       for (const doc of toAdd) {
-        await fetch("/api/domiciliation-file-type", {
+        await fetch(`${apiUrl}/api/domiciliation-file-type`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -363,7 +364,7 @@ export default function ParametersWrapper() {
       for (const doc of toUpdate) {
         const existingDoc = existingDocs.find((d) => d.label === doc.label);
         if (existingDoc) {
-          await fetch(`/api/domiciliation-file-type/${existingDoc.id}`, {
+          await fetch(`${apiUrl}/api/domiciliation-file-type/${existingDoc.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -398,7 +399,7 @@ export default function ParametersWrapper() {
         }),
       });
 
-      const res = await fetch(`/api/color-theme/${selectedTheme}`);
+      const res = await fetch(`${apiUrl}/api/color-theme/${selectedTheme}`);
       const result = await res.json();
 
       const theme = result.success ? result.data : null;
@@ -413,7 +414,7 @@ export default function ParametersWrapper() {
       toast({
         title: "Succès",
         description: "Paramètres mis à jour avec succès.",
-        variant: "success",
+        variant: "default",
       });
 
       window.location.reload();

@@ -1,8 +1,9 @@
 "use client";
 
-import { RadioGroup, RadioGroupItem } from "@/src/components/ui/radio-group";
 import { Label } from "@/src/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/src/components/ui/radio-group";
 import { ColorTheme } from "@/src/lib/type";
+import { apiUrl } from "@/src/lib/utils";
 import { useEffect, useState } from "react";
 
 interface ThemeSelectorProps {
@@ -18,11 +19,32 @@ export default function ThemeSelector({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Helpers to safely parse color values which may be null/undefined or in different formats
+  const parseRgbValues = (val?: string) => {
+    if (!val) return "0,0,0";
+    const s = val.trim();
+    // rgb(...) or rgba(...)
+    if (s.startsWith("rgb")) {
+      return s.replace(/rgba?\(|\)/g, "").trim().replace(/\s+/g, ",");
+    }
+    // already comma separated
+    if (s.includes(",")) return s;
+    // space separated like "255 255 255"
+    return s.split(/\s+/).join(",");
+  };
+
+  const cssWithAlpha = (val?: string | null, alpha = 1) => {
+    if (!val) return `rgba(0,0,0,${alpha})`;
+    const s = val.trim();
+    const inner = parseRgbValues(s);
+    return alpha === 1 ? `rgb(${inner})` : `rgba(${inner}, ${alpha})`;
+  };
+
   useEffect(() => {
     async function fetchThemes() {
       try {
         setLoading(true);
-        const res = await fetch("/api/color-theme");
+        const res = await fetch(`${apiUrl}/api/color-themes`);
 
         if (!res.ok) {
           throw new Error(`Erreur HTTP: ${res.status}`);
@@ -153,9 +175,10 @@ export default function ThemeSelector({
                 backgroundColor:
                   selectedTheme === theme.id
                     ? undefined
-                    : theme.backgroundColor.startsWith("rgb(")
-                      ? `${theme.backgroundColor}15`
-                      : `rgb(${theme.primaryColor.split(" ").join(",")}, 0.07)`,
+                    : theme.backgroundColor && theme.backgroundColor.trim().startsWith("rgb(")
+                      ? // append low alpha hex-like suffix if given as rgb(...) -> use rgba for clarity
+                        cssWithAlpha(theme.backgroundColor, 0.08)
+                      : cssWithAlpha(theme.primaryColor, 0.07),
               }}
             >
               {/* Indicateur visuel du thème */}
@@ -163,21 +186,21 @@ export default function ThemeSelector({
                 <div
                   className="w-4 h-4 rounded-full border shadow-sm"
                   style={{
-                    backgroundColor: theme.backgroundColor.startsWith("rgb(")
-                      ? theme.backgroundColor
-                      : `rgb(${theme.primaryColor.split(" ").join(",")})`,
+                    backgroundColor: theme.backgroundColor && theme.backgroundColor.trim().startsWith("rgb(")
+                      ? cssWithAlpha(theme.backgroundColor, 1)
+                      : cssWithAlpha(theme.primaryColor, 1),
                   }}
                 />
                 <div
                   className="w-4 h-4 rounded-full border shadow-sm"
                   style={{
-                    backgroundColor: `rgb(${theme.foregroundColor.split(" ").join(",")})`,
+                    backgroundColor: cssWithAlpha(theme.foregroundColor, 1),
                   }}
                 />
                 <div
                   className="w-4 h-4 rounded-full border shadow-sm"
                   style={{
-                    backgroundColor: `rgb(${theme.backgroundColor.split(" ").join(",")})`,
+                    backgroundColor: cssWithAlpha(theme.backgroundColor, 1),
                   }}
                 />
               </div>
@@ -190,7 +213,7 @@ export default function ThemeSelector({
                     color:
                       selectedTheme === theme.id
                         ? undefined
-                        : `rgb(${theme.standardColor.split(" ").join(",")})`,
+                        : cssWithAlpha(theme.standardColor, 1),
                   }}
                 >
                   {theme.name || `Thème ${theme.id}`}

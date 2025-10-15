@@ -34,7 +34,7 @@ export default function DomiciliationPage() {
   const [isClient, setIsClient] = useState(false);
   
   const router = useRouter();
-  const { user, status, logout } = useAuth();
+  const { user, status, logout, token } = useAuth();
   const setAdminCompany = useAdminStore((state) => state.setAdminCompany);
   const adminCompany = useAdminStore((state) => state.adminCompany);
   const adminCompanySlud = adminCompany?.slug;
@@ -93,6 +93,52 @@ export default function DomiciliationPage() {
       fetchVirtualOffices();
     }
   }, [status, isClient]);
+
+  // Si l'utilisateur est admin, récupérer les informations complètes de la company
+  useEffect(() => {
+    const fetchCompany = async () => {
+      if (!user) return;
+      if (user.profileType !== "adminUser") return;
+      // évite de recharger si déjà présent
+      if (adminCompany?.id && adminCompany.id === user.companyId) return;
+
+      try {
+        const companyIdentifier = user.companyId ?? user.companySlug;
+        if (!companyIdentifier) return;
+
+        const url = typeof companyIdentifier === 'number'
+          ? `${apiUrl}/api/companies/${companyIdentifier}`
+          : `${apiUrl}/api/companies?slug=${companyIdentifier}`;
+
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+
+        if (!res.ok) {
+          console.warn('Impossible de récupérer la company :', res.status);
+          return;
+        }
+
+        const json = await res.json();
+        if (json && json.success && json.data) {
+          setAdminCompany(json.data);
+        } else if (json && json.data) {
+          // cas où l'API ne renvoie pas success mais renvoie quand même data
+          setAdminCompany(json.data);
+        }
+      } catch (err) {
+        console.error('Erreur lors de la récupération de la company :', err);
+      }
+    };
+
+    if (status === 'authenticated' && isClient) {
+      fetchCompany();
+    }
+  }, [status, isClient, user, token, adminCompany, setAdminCompany]);
 
   // Afficher un loading pendant le chargement initial
   if (!isClient || status === "loading") {
